@@ -4470,7 +4470,8 @@
               },
               barLabels: {
                 enabled: false,
-                margin: 5,
+                offsetX: 0,
+                offsetY: 0,
                 useSeriesColors: true,
                 fontFamily: undefined,
                 fontWeight: 600,
@@ -11827,10 +11828,13 @@
             var getForeColor = function getForeColor() {
               return Array.isArray(yColors) ? yColors[i] : yColors;
             };
+            var existingYLabels = Utils$1.listToArray(w.globals.dom.baseEl.querySelectorAll(".apexcharts-yaxis[rel='".concat(realIndex, "'] .apexcharts-yaxis-label tspan"))).map(function (_) {
+              return _.textContent;
+            });
             var label = graphics.drawText({
               x: xPad,
               y: lY,
-              text: val,
+              text: existingYLabels.indexOf(val) >= 0 ? '' : val,
               textAnchor: textAnchor,
               fontSize: yaxisFontSize,
               fontFamily: yaxisFontFamily,
@@ -13102,7 +13106,7 @@
               gl.skipLastTimelinelabel = true;
             }
           } else if (xtype !== 'datetime') {
-            if (_this.dCtx.gridPad.right < lbWidth / 2 - _this.dCtx.yAxisWidthRight && !gl.rotateXLabels && !w.config.xaxis.labels.trim && (w.config.xaxis.tickPlacement !== 'between' || w.globals.isBarHorizontal)) {
+            if (_this.dCtx.gridPad.right < lbWidth / 2 - _this.dCtx.yAxisWidthRight && !gl.rotateXLabels && !w.config.xaxis.labels.trim) {
               _this.dCtx.xPadRight = lbWidth / 2 + 1;
             }
           }
@@ -13919,7 +13923,7 @@
         if (shape !== 'circle') {
           var markers = new Markers(this.ctx);
           var markerConfig = markers.getMarkerConfig({
-            cssClass: 'apexcharts-marker',
+            cssClass: 'apexcharts-legend-marker apexcharts-marker',
             seriesIndex: i,
             size: mSize,
             pRadius: Array.isArray(mBorderRadius) ? mBorderRadius[i] : mBorderRadius,
@@ -13930,7 +13934,7 @@
             pointFillColor: Array.isArray(w.config.legend.markers.fillColors) ? fillcolor[i] : markerConfig.pointFillColor,
             shape: shape
           }));
-          var shapes = SVG.select('.apexcharts-marker').members;
+          var shapes = SVG.select('.apexcharts-legend-marker.apexcharts-marker').members;
           shapes.forEach(function (shape) {
             shape.node.style.transform = 'translate(50%, 50%)';
           });
@@ -14762,7 +14766,7 @@
               });
             }
           } else {
-            if (me.w.globals.mousedown && w.globals.zoomEnabled || me.w.globals.mousedown && w.globals.selectionEnabled) {
+            if (me.w.globals.mousedown && w.globals.zoomEnabled || me.w.globals.mousedown && w.globals.selectionEnabled && false) {
               me.selection = me.selectionDrawing({
                 context: me,
                 zoomtype: zoomtype
@@ -16700,7 +16704,7 @@
           opt: opt
         });
         i = barXY.i;
-        var barHeight = barXY.barHeight;
+        barXY.barHeight;
         var j = barXY.j;
         w.globals.capturedSeriesIndex = i;
         w.globals.capturedDataPointIndex = j;
@@ -16721,8 +16725,8 @@
           y = w.globals.svgHeight - ttCtx.tooltipRect.ttHeight;
         }
         var seriesIndex = parseInt(opt.paths.parentNode.getAttribute('data:realIndex'), 10);
-        var isReversed = w.globals.isMultipleYAxis ? w.config.yaxis[seriesIndex] && w.config.yaxis[seriesIndex].reversed : w.config.yaxis[0].reversed;
-        if (x + ttCtx.tooltipRect.ttWidth > w.globals.gridWidth && !isReversed) {
+        w.globals.isMultipleYAxis ? w.config.yaxis[seriesIndex] && w.config.yaxis[seriesIndex].reversed : w.config.yaxis[0].reversed;
+        if (x + ttCtx.tooltipRect.ttWidth > w.globals.gridWidth) {
           x = x - ttCtx.tooltipRect.ttWidth;
         } else if (x < 0) {
           x = 0;
@@ -16747,15 +16751,6 @@
 
         // move tooltip here
         if (!ttCtx.fixedTooltip && (!w.config.tooltip.shared || w.globals.isBarHorizontal && ttCtx.tooltipUtil.hasBars())) {
-          if (isReversed) {
-            x = x - ttCtx.tooltipRect.ttWidth;
-            if (x < 0) {
-              x = 0;
-            }
-          }
-          if (isReversed && !(w.globals.isBarHorizontal && ttCtx.tooltipUtil.hasBars())) {
-            y = y + barHeight - (w.globals.series[i][j] < 0 ? barHeight : 0) * 2;
-          }
           y = y + w.globals.translateY - ttCtx.tooltipRect.ttHeight / 2;
           tooltipEl.style.left = x + w.globals.translateX + 'px';
           tooltipEl.style.top = y + 'px';
@@ -17915,9 +17910,9 @@
         var w = this.w;
         var i = opts.i,
           j = opts.j,
-          realIndex = opts.realIndex,
-          columnGroupIndex = opts.columnGroupIndex,
-          y = opts.y,
+          realIndex = opts.realIndex;
+          opts.columnGroupIndex;
+          var y = opts.y,
           bcx = opts.bcx,
           barWidth = opts.barWidth,
           barHeight = opts.barHeight,
@@ -17941,7 +17936,7 @@
             j: j
           }),
           zeroEncounters = _this$barCtx$barHelpe.zeroEncounters;
-        bcx = bcx - strokeWidth / 2 + columnGroupIndex * barWidth;
+        bcx = bcx - strokeWidth / 2;
         var dataPointsDividedWidth = w.globals.gridWidth / w.globals.dataPoints;
         if (this.barCtx.isVerticalGroupedRangeBar) {
           dataLabelsX += barWidth / 2;
@@ -17963,7 +17958,6 @@
         var newY = y;
         if (this.barCtx.isReversed) {
           newY = y + (valIsNegative ? barHeight : -barHeight);
-          y = y - barHeight;
         }
         switch (barDataLabelsConfig.position) {
           case 'center':
@@ -18026,8 +18020,8 @@
           }
 
           // width divided into equal parts
-          var xDivision = w.globals.gridWidth / w.globals.dataPoints;
-          totalDataLabelsX = totalDataLabelsBcx + barWidth * (w.globals.barGroups.length - 0.5) - (w.globals.isXNumeric ? barWidth : xDivision) + barTotalDataLabelsConfig.offsetX;
+          var xDivision = dataPointsDividedWidth;
+          totalDataLabelsX = totalDataLabelsBcx + (w.globals.isXNumeric ? -barWidth * w.globals.barGroups.length / 2 : w.globals.barGroups.length * barWidth / 2 - (w.globals.barGroups.length - 1) * barWidth - xDivision) + barTotalDataLabelsConfig.offsetX;
         }
         if (!w.config.chart.stacked) {
           if (dataLabelsY < 0) {
@@ -18053,9 +18047,9 @@
         var x = opts.x,
           i = opts.i,
           j = opts.j,
-          realIndex = opts.realIndex,
-          columnGroupIndex = opts.columnGroupIndex,
-          bcy = opts.bcy,
+          realIndex = opts.realIndex;
+          opts.columnGroupIndex;
+          var bcy = opts.bcy,
           barHeight = opts.barHeight,
           barWidth = opts.barWidth,
           textRects = opts.textRects,
@@ -18068,7 +18062,6 @@
           offY = opts.offY;
         var dataPointsDividedHeight = w.globals.gridHeight / w.globals.dataPoints;
         barWidth = Math.abs(barWidth);
-        bcy += columnGroupIndex * barHeight;
         var dataLabelsY = bcy - (this.barCtx.isRangeBar ? 0 : dataPointsDividedHeight) + barHeight / 2 + textRects.height / 2 + offY - 3;
         var totalDataLabelsX;
         var totalDataLabelsY;
@@ -18077,7 +18070,6 @@
         var newX = x;
         if (this.barCtx.isReversed) {
           newX = x + (valIsNegative ? -barWidth : barWidth);
-          x = w.globals.gridWidth - barWidth;
           totalDataLabelsAnchor = valIsNegative ? 'start' : 'end';
         }
         switch (barDataLabelsConfig.position) {
@@ -18232,20 +18224,19 @@
       value: function drawTotalDataLabels(_ref3) {
         var x = _ref3.x,
           y = _ref3.y,
-          val = _ref3.val,
-          barWidth = _ref3.barWidth,
-          barHeight = _ref3.barHeight,
-          realIndex = _ref3.realIndex,
+          val = _ref3.val;
+          _ref3.barWidth;
+          _ref3.barHeight;
+          var realIndex = _ref3.realIndex,
           textAnchor = _ref3.textAnchor,
           barTotalDataLabelsConfig = _ref3.barTotalDataLabelsConfig;
-        var w = this.w;
+        this.w;
         var graphics = new Graphics(this.barCtx.ctx);
         var totalDataLabelText;
         if (barTotalDataLabelsConfig.enabled && typeof x !== 'undefined' && typeof y !== 'undefined' && this.barCtx.lastActiveBarSerieIndex === realIndex) {
           totalDataLabelText = graphics.drawText({
-            // TODO: Add gap, visibleI
-            x: x - (!w.globals.isBarHorizontal && w.globals.barGroups.length ? barWidth * (w.globals.barGroups.length - 1) / 2 : 0),
-            y: y - (w.globals.isBarHorizontal && w.globals.barGroups.length ? barHeight * (w.globals.barGroups.length - 1) / 2 : 0),
+            x: x,
+            y: y,
             foreColor: barTotalDataLabelsConfig.style.color,
             text: val,
             textAnchor: textAnchor,
@@ -19010,8 +19001,8 @@
               x: x,
               y: y,
               series: series,
-              barHeight: paths.barHeight ? paths.barHeight : barHeight,
-              barWidth: paths.barWidth ? paths.barWidth : barWidth,
+              barHeight: Math.abs(paths.barHeight ? paths.barHeight : barHeight),
+              barWidth: Math.abs(paths.barWidth ? paths.barWidth : barWidth),
               elDataLabelsWrap: elDataLabelsWrap,
               elGoalsMarkers: elGoalsMarkers,
               elBarShadows: elBarShadows,
@@ -19518,7 +19509,7 @@
               elDataLabelsWrap: elDataLabelsWrap,
               elGoalsMarkers: elGoalsMarkers,
               type: 'bar',
-              visibleSeries: 0
+              visibleSeries: columnGroupIndex
             });
           }
 
@@ -21850,8 +21841,8 @@
             if (!textColor) {
               textColor = w.config.chart.foreColor;
             }
-            var x = barStartCords.x - this.barLabels.margin;
-            var y = barStartCords.y;
+            var x = barStartCords.x + this.barLabels.offsetX;
+            var y = barStartCords.y + this.barLabels.offsetY;
             var elText = graphics.drawText({
               x: x,
               y: y,
@@ -25207,6 +25198,8 @@
       value: function setSVGDimensions() {
         var gl = this.w.globals;
         var cnf = this.w.config;
+        if (!cnf.chart.width) cnf.chart.width = '100%';
+        if (!cnf.chart.height) cnf.chart.height = 'auto';
         gl.svgWidth = cnf.chart.width;
         gl.svgHeight = cnf.chart.height;
         var elDim = Utils$1.getDimensions(this.el);
@@ -25221,7 +25214,7 @@
         } else if (widthUnit === 'px' || widthUnit === '') {
           gl.svgWidth = parseInt(cnf.chart.width, 10);
         }
-        var heightUnit = cnf.chart.height.toString().split(/[0-9]+/g).pop();
+        var heightUnit = String(cnf.chart.height).toString().split(/[0-9]+/g).pop();
         if (gl.svgHeight !== 'auto' && gl.svgHeight !== '') {
           if (heightUnit === '%') {
             var elParentDim = Utils$1.getDimensions(this.el.parentNode);

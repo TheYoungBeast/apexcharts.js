@@ -182,7 +182,7 @@ export default class ZoomPanSelection extends Toolbar {
       } else {
         if (
           (me.w.globals.mousedown && w.globals.zoomEnabled) ||
-          (me.w.globals.mousedown && w.globals.selectionEnabled)
+          (me.w.globals.mousedown && w.globals.selectionEnabled && false)
         ) {
           me.selection = me.selectionDrawing({
             context: me,
